@@ -1,32 +1,46 @@
 import os
 import pandas as pd
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from mlc_chat import ChatModule
+from mlc_chat.callback import StreamToStdout
+
+data_points = ["Total amount", 
+               "Hourly Rate",
+               "Invoice number",
+               "Project name",
+               "Due date",
+               "Sales Representative"]
+args = tuple(data_points)
+data_points_str = '''
+  - {0}
+  - {1}
+  - {2}
+  - {3}
+  - {4}
+  - {5}
+'''.format(*args)
 
 def extract_invoice_data(text):
-    # Load the T5 model and tokenizer
-    model_name = "t5-small"
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
-    model = T5ForConditionalGeneration.from_pretrained(model_name)
-
+    # load model
+    cm = ChatModule(model="Llama-2-7b-chat-hf-q4f16_1")
+  
     # Define a prompt for the model
-    prompt = f"Extract the following fields from the invoice text:\n{text}"
+    prompt = f"Analyze the following invoice email and capture the following data points.  print the data points in json format:{data_points_str}\n\n{text}"
+    print(prompt)
 
-    # Tokenize and generate output
-    input_ids = tokenizer.encode(prompt, return_tensors="pt")
-    output_ids = model.generate(input_ids)
-
-    # Decode the generated output
-    generated_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-
+    output = cm.generate(prompt=prompt)
+    print(output)
     # Split the generated text into lines
-    lines = generated_text.split('\n')
+    lines = output.split('\n')
+    print(lines)
 
     # Extract data from the generated lines
     extracted_data = {}
     for line in lines:
-        field, value = line.split(':')
-        extracted_data[field.strip()] = value.strip()
+        if any(substring.lower() in line.lower() for substring in data_points):
+          field, value = line.split(':')
+          extracted_data[field.strip()] = value.strip()
 
+    print(extracted_data)
     return extracted_data
 
 def process_invoices(directory_path):
