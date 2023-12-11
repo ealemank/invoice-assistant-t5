@@ -60,7 +60,7 @@ def export_to_csv(data, csv_filename='invoices_data.csv'):
 
 if __name__ == "__main__":
     # Specify the directory path containing invoice text files
-    invoices_directory = '/path/to/invoices'
+    invoices_directory = './invoices'
 
     # Process invoices and extract data
     all_invoices_data = process_invoices(invoices_directory)
