@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import re
+import json
 from mlc_chat import ChatModule
 from mlc_chat.callback import StreamToStdout
 
@@ -20,6 +22,7 @@ data_points_str = '''
 '''.format(*args)
 
 MODEL_NAME = os.getenv('LLAMA_MODEL_NAME', "Llama-2-7b-chat-hf-q4f16_1")
+INVOICES_DIR = os.getenv('INVOICES_DIR', './invoices')
 
 def extract_invoice_data(text):
     # load model
@@ -31,19 +34,22 @@ def extract_invoice_data(text):
 
     output = cm.generate(prompt=prompt)
     print(output)
-    # Split the generated text into lines
-    lines = output.split('\n')
-    print(lines)
 
-    # Extract data from the generated lines
-    extracted_data = {}
-    for line in lines:
-        if any(substring.lower() in line.lower() for substring in data_points):
-          field, value = line.split(':')
-          extracted_data[field.strip()] = value.strip()
+    json_block_pattern = re.compile(r'{[^}]+}')
+    json_block_match = json_block_pattern.search(output)
 
-    print(extracted_data)
-    return extracted_data
+    json_data = ""
+    if json_block_match:
+        # Extract the JSON block from the match
+        json_block = json_block_match.group()
+
+        # Load the JSON data
+        json_data = json.loads(json_block)
+        print("JSON data extracted successfully:")
+        print(json_data)
+
+
+    return json_data
 
 def process_invoices(directory_path):
     # Initialize a list to store extracted data for all invoices
@@ -76,10 +82,10 @@ def export_to_csv(data, csv_filename='invoices_data.csv'):
 
 if __name__ == "__main__":
     # Specify the directory path containing invoice text files
-    invoices_directory = './invoices'
+    # invoices_directory = './invoices'
 
     # Process invoices and extract data
-    all_invoices_data = process_invoices(invoices_directory)
+    all_invoices_data = process_invoices(INVOICES_DIR)
 
     # Export the extracted data to a CSV file
     export_to_csv(all_invoices_data)
