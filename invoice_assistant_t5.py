@@ -68,12 +68,14 @@ def process_invoices(directory_path):
             invoice_data = extract_invoice_data(file_content)
 
             # Add the extracted data to the list
+            print(f"appending invoice data to list: {invoice_data}")
             all_invoices_data.append(invoice_data)
 
     return all_invoices_data
 
 def export_to_csv(data, csv_filename='invoices_data.csv'):
     # Convert the list of dictionaries to a DataFrame
+    print(f"all data going to panda data frame\n {data}")
     df = pd.DataFrame(data)
 
     # Export DataFrame to a CSV file
