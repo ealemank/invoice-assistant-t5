@@ -19,11 +19,11 @@ data_points_str = '''
   - {5}
 '''.format(*args)
 
-MODEL_DIR = os.environ["LLAMA_MODEL_DIR"]
-MODEL_NAME = "Llama-2-7b-chat-hf-q4f16_1"
+MODEL_NAME = os.getenv('LLAMA_MODEL_NAME', "Llama-2-7b-chat-hf-q4f16_1")
+
 def extract_invoice_data(text):
     # load model
-    cm = ChatModule(model=f"{MODEL_DIR}{MODEL_NAME}")
+    cm = ChatModule(model=f"{MODEL_NAME}")
   
     # Define a prompt for the model
     prompt = f"Analyze the following invoice email and capture the following data points.  print the data points in json format:{data_points_str}\n\n{text}"
